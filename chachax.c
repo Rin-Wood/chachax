@@ -1,3 +1,28 @@
+/*
+ * Copyright (c) 2014-2025, Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright notice,
+ *       this list of conditions and the following disclaimer in the documentation
+ *       and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
 #include <Python.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -6,6 +31,7 @@
 typedef uint8_t  byte;
 typedef uint32_t uint;
 typedef uint64_t uint64;
+#define BLOCKLEN 64
 
 static void QuarterRound(uint *x, uint a, uint b, uint c, uint d) {
     x[a] += x[b];
@@ -74,25 +100,24 @@ static void generate_key(byte *context, uint *key, uint *nonce, int counter, int
 }
 
 static void decrypt(byte *data, int dataLen, byte *keyBytes, byte *nonceBytes, int rounds) {
-    int blocklen = 0x40;
     int count, count2, counter, dataIndex, i, j;
     uint key[8], nonce[3];
-    byte array[blocklen];
+    byte array[BLOCKLEN];
     for(int i = 0;i < 8; i++){
         key[i] = ((uint)keyBytes[i*4]) | ((uint)keyBytes[i*4+1]<<8) | ((uint)keyBytes[i*4+2]<<16) | ((uint)keyBytes[i*4+3]<<24);
     }
     for(int i = 0;i < 3; i++){
         nonce[i] = ((uint)nonceBytes[i*4]) | ((uint)nonceBytes[i*4+1]<<8) | ((uint)nonceBytes[i*4+2]<<16) | ((uint)nonceBytes[i*4+3]<<24);
     }
-    count = dataLen / blocklen;
-    count2 = dataLen % blocklen;
+    count = dataLen / BLOCKLEN;
+    count2 = dataLen % BLOCKLEN;
     counter = 0;
     dataIndex = 0;
 
     if (count > 0) {
         for (i = 0; i < count; i++) {
             generate_key(array, key, nonce, counter++, rounds);
-            for (j = 0; j < blocklen; j++) {
+            for (j = 0; j < BLOCKLEN; j++) {
                 data[dataIndex++] ^= array[j];
             }
         }
