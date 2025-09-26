@@ -10,7 +10,7 @@ except Exception:
 
 setup(
     name="chachax",
-    version="1.0.0",
+    version="1.0.1",
     author='wood',
     author_email='miraclerinwood@gmail.com',
     url='https://github.com/Rin-Wood/chachax',
@@ -38,3 +38,4 @@ setup(
     ],
     python_requires=">=3.6",
 )
+
