@@ -99,8 +99,8 @@ static void generate_key(byte *context, uint *key, uint *nonce, int counter, int
     DoRound(context, round, state);
 }
 
-static void decrypt(byte *data, int dataLen, byte *keyBytes, byte *nonceBytes, int rounds) {
-    int count, count2, counter, dataIndex, i, j;
+static void decrypt(byte *data, int dataLen, byte *keyBytes, byte *nonceBytes, int rounds, int counter) {
+    int count, count2, dataIndex, i, j;
     uint key[8], nonce[3];
     byte array[BLOCKLEN];
     for(int i = 0;i < 8; i++){
@@ -111,7 +111,6 @@ static void decrypt(byte *data, int dataLen, byte *keyBytes, byte *nonceBytes, i
     }
     count = dataLen / BLOCKLEN;
     count2 = dataLen % BLOCKLEN;
-    counter = 0;
     dataIndex = 0;
 
     if (count > 0) {
@@ -136,9 +135,10 @@ static PyObject* py_decrypt(PyObject* self, PyObject* args) {
     Py_buffer nonceBytes;
     PyObject *result;
     byte *buffer;
-    int rounds;
+    int rounds = 8;
+    int counter = 0;
 
-    if (!PyArg_ParseTuple(args, "y*y*y*i", &data, &keyBytes, &nonceBytes, &rounds)) {
+    if (!PyArg_ParseTuple(args, "y*y*y*|ii", &data, &keyBytes, &nonceBytes, &rounds, &counter)) {
         return NULL;
     }
 
@@ -152,7 +152,7 @@ static PyObject* py_decrypt(PyObject* self, PyObject* args) {
     }
 
     memcpy(buffer, data.buf, data.len);
-    decrypt(buffer, (int)data.len, (byte*)keyBytes.buf, (byte*)nonceBytes.buf, rounds);
+    decrypt(buffer, (int)data.len, (byte*)keyBytes.buf, (byte*)nonceBytes.buf, rounds, counter);
     result = PyBytes_FromStringAndSize((const char *)buffer, data.len);
     free(buffer);
     PyBuffer_Release(&data);
@@ -178,3 +178,4 @@ static struct PyModuleDef chachaxmodule = {
 PyMODINIT_FUNC PyInit_chachax(void) {
     return PyModule_Create(&chachaxmodule);
 }
+
